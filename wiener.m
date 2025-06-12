@@ -28,8 +28,8 @@ hold on;
 plot(sHat(1,:));  
 legend('raw','denoised');
 
-eeg_test = load('test.mat').test_eeg;  % some test EEG
-sHat_test = W * eeg_test;  % apply learned filter
+eeg_test = load('test.mat').test_eeg;  % test EEG
+sHat_test = W * eeg_test;  % apply wiener filter
 
 figure;
 plot(eeg_test(19,:));   
