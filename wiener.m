@@ -18,7 +18,6 @@ Rww = (W * W.');     % noise covariance
 Rss = (S * S.');     % EEG covariance
 
 lambda = 1e-6;
-%lambda = 0;
 W = Rss / (Rss + Rww + lambda * eye(size(Rss)));
 
 sHat = W * eeg;     % estimation
