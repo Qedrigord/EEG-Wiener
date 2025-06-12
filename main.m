@@ -1,39 +1,42 @@
+% Aggelopous Sokratis 10306
+% Skoularikis Anastasios 10458
+close all
+
+% Load data
 data = load('train.mat');
 eeg = data.train_eeg;
 blinks = data.blinks;
 
-allIdx   = 1:size(eeg,2);
-blinkIdx = blinks;                      % artifact frames
-cleanIdx = setdiff(allIdx, blinkIdx);   % artifact-free frames
-
-W = eeg(:, blinkIdx );   %  (#blink × nChan)  artifacts (blinks)
-S = eeg(:, cleanIdx );   %  (#clean × nChan)  EEG
-
-% ----- ensure zero mean -----
-W = detrend(W, 'constant');
-S = detrend(S, 'constant');
-
-% ----- covariances -----
-Rww = (W * W.');     % noise covariance
-Rss = (S * S.');     % EEG covariance
-
-lambda = 1e-6;
-%lambda = 0;
-W = Rss / (Rss + Rww + lambda * eye(size(Rss)));
-
-sHat = W * eeg;     % estimation
-
+% Plot EEG signal
 figure;
-plot(eeg(1,:));   
+plot(eeg(1, :), 'black');
+title('EEG');
+xlabel('Sample Index');
+ylabel('Amplitude');
 hold on;
-plot(sHat(1,:));  
-legend('raw','denoised');
 
-eeg_test = load('test.mat').test_eeg;  % some test EEG
-sHat_test = W * eeg_test;  % apply learned filter
+seperate_blinks = split_blink_segments(blinks);
 
-figure;
-plot(eeg_test(19,:));   
-hold on;
-plot(sHat_test(19,:));  
-legend('raw','denoised');
+% Draw transparent patches for each blink 
+y_limits = ylim;
+for i = 1:length(seperate_blinks)
+    blink = seperate_blinks{i};
+    patch([blink(1) blink(end) blink(end) blink(1)], [y_limits(1) y_limits(1) y_limits(2) y_limits(2)], uint8([17 17 17]), 'FaceAlpha', 0.1, 'EdgeColor', 'none');
+end
+
+legend('EEG Signal', 'Blinks');
+hold off;
+
+
+%% Functions
+function seperate_blinks = split_blink_segments(blinks)
+    seperate_blinks = {};  
+    start_idx = 1;
+    for i = 1:length(blinks)-1
+        if blinks(i+1) ~= blinks(i) + 1
+            seperate_blinks{end+1} = blinks(start_idx:i);
+            start_idx = i + 1;
+        end
+    end
+    seperate_blinks{end+1} = blinks(start_idx:end);  % Add the last blink
+end
